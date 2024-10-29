@@ -273,6 +273,10 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
         if is_embedding_only:
             return f"{potential_user_intents[0]}"
 
+        llm_call_info_var.set(
+            LLMCallInfo(task=Task.GENERATE_USER_INTENT_FROM_USER_ACTION.value)
+        )
+
         prompt = self.llm_task_manager.render_task_prompt(
             task=Task.GENERATE_USER_INTENT_FROM_USER_ACTION,
             events=events,
@@ -341,6 +345,12 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
             is_embedding_only,
         ) = await self._collect_user_intent_and_examples(
             state, user_action, max_example_flows
+        )
+
+        llm_call_info_var.set(
+            LLMCallInfo(
+                task=Task.GENERATE_USER_INTENT_AND_BOT_ACTION_FROM_USER_ACTION.value
+            )
         )
 
         prompt = self.llm_task_manager.render_task_prompt(
@@ -504,6 +514,10 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
         flow_id = new_uuid()[0:4]
         flow_name = f"dynamic_{flow_id}"
 
+        llm_call_info_var.set(
+            LLMCallInfo(task=Task.GENERATE_FLOW_FROM_INSTRUCTIONS.value)
+        )
+
         prompt = self.llm_task_manager.render_task_prompt(
             task=Task.GENERATE_FLOW_FROM_INSTRUCTIONS,
             events=events,
@@ -567,6 +581,8 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
         for result in reversed(results):
             examples += f"{result.meta['flow']}\n"
 
+        llm_call_info_var.set(LLMCallInfo(task=Task.GENERATE_FLOW_FROM_NAME.value))
+
         prompt = self.llm_task_manager.render_task_prompt(
             task=Task.GENERATE_FLOW_FROM_NAME,
             events=events,
@@ -627,6 +643,8 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
         examples = examples.strip("\n")
 
         # TODO: add examples from the actual running flows
+
+        llm_call_info_var.set(LLMCallInfo(task=Task.GENERATE_FLOW_CONTINUATION.value))
 
         prompt = self.llm_task_manager.render_task_prompt(
             task=Task.GENERATE_FLOW_CONTINUATION,
@@ -743,6 +761,10 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
                 if "GenerateValueAction" not in result.text:
                     examples += f"{result.text}\n\n"
 
+        llm_call_info_var.set(
+            LLMCallInfo(task=Task.GENERATE_VALUE_FROM_INSTRUCTION.value)
+        )
+
         prompt = self.llm_task_manager.render_task_prompt(
             task=Task.GENERATE_VALUE_FROM_INSTRUCTION,
             events=events,
@@ -847,6 +869,10 @@ class LLMGenerationActionsV2dotx(LLMGenerationActions):
         # TODO: add the context of the flow
         flow_nld = self.llm_task_manager._render_string(
             textwrap.dedent(docstring), context=render_context, events=events
+        )
+
+        llm_call_info_var.set(
+            LLMCallInfo(task=Task.GENERATE_FLOW_CONTINUATION_FROM_NLD.value)
         )
 
         prompt = self.llm_task_manager.render_task_prompt(
